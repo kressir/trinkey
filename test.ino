@@ -57,7 +57,7 @@ void loop() {
       // statements
       break;
     case -2:
-      Keyboard.println("zxcvASDFqwer1234");
+      Keyboard.println(" ");
       break;
     default:
       // statements
