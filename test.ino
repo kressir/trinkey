@@ -57,7 +57,7 @@ void loop() {
       // statements
       break;
     case -2:
-      Keyboard.println(" ");
+      Keyboard.println("zxcvASDFqwer1234");
       break;
     default:
       // statements
@@ -72,7 +72,7 @@ void loop() {
   
   if (wiggle) {
     strip.setBrightness(neo_brightness);
-    if(millis()-lastMouse > 5000){
+    if(millis()-lastMouse > 300000){
       Mouse.move(1, 0, 0);
       delay(10);
       Mouse.move(-1, 0, 0);
