@@ -54,9 +54,13 @@ void loop() {
       wiggle = !wiggle;
       break;
     case -1:
-      // statements
+      Keyboard.println(" ");
       break;
     case -2:
+      Keyboard.press(KEY_LEFT_CTRL);
+      delay(100);
+      Keyboard.releaseAll();
+      delay(1000);
       Keyboard.println(" ");
       break;
     default:
