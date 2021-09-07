@@ -10,6 +10,8 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_NEOPIXEL, PIN_NEOPIXEL, NEO_GRB 
 // Create the touch pad
 Adafruit_FreeTouch qt = Adafruit_FreeTouch(PIN_TOUCH, OVERSAMPLE_4, RESISTOR_50K, FREQ_MODE_NONE);
 int16_t neo_brightness = 20; // initialize with 20 brightness (out of 255)
+int intDir = 1;
+unsigned long intLastInc = 0;
 
 typedef struct {
   char stuff[100];
@@ -31,8 +33,8 @@ void setup() {
   strip.setBrightness(neo_brightness);
   strip.show(); // Initialize all pixels to 'off'
 
-  //if (! qt.begin())
-  //  Serial.println("Failed to begin qt");
+  if (! qt.begin())
+    Serial.println("Failed to begin qt");
   Keyboard.begin();
   Mouse.begin();
   fd = my_flash_store.read();
@@ -79,12 +81,20 @@ void loop() {
     default:
       break;
   }
-  //if (button1.clicks != 0) {
-    //Serial.println("Clicks: " + (String)button1.clicks);
-  //}
 
   // measure the captouches
   uint16_t touch = qt.measure();
+  //if (prnt) {
+  //  Serial.println(touch);
+  //}
+  if (touch>500){
+    if(millis()-intLastInc>20){
+      intLastInc = millis();
+      neo_brightness = neo_brightness + intDir;
+      if (neo_brightness == 255) intDir = -1;
+      if (neo_brightness == 0) intDir = 1;
+    }
+  }
 
   int incomingByte;
   if (prog){
