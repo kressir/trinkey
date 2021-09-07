@@ -126,10 +126,10 @@ void loop() {
           while (Serial.available() > 0) {
             incomingByte = Serial.read();
           }
-          prog = false;
-          writeStop = -1;
           fd.stuff[writeStop] = 0;
           my_flash_store.write(fd);
+          prog = false;
+          writeStop = -1;
         }else{
           writeStop++;
           fd.stuff[writeStop] = incomingByte;
