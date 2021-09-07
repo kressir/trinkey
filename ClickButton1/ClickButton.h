@@ -27,6 +27,8 @@ class ClickButton
     unsigned long debounceTime;
     unsigned long multiclickTime;
     unsigned long longClickTime;
+    unsigned long timeDown;
+    unsigned long timeUp;
 	boolean inProcess;
   private:
     uint8_t _pin;                 // Arduino pin connected to the button
