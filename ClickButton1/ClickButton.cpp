@@ -92,7 +92,9 @@ ClickButton::ClickButton(uint8_t buttonPin, boolean activeType)
   pinMode(_pin, INPUT);
 }
 
-ClickButton::ClickButton(uint8_t buttonPin, boolean activeType, boolean internalPullup)
+
+
+ClickButton::ClickButton(uint8_t buttonPin, boolean activeType, cb_pinMode _pinMode)
 {
   _pin           = buttonPin;
   _activeHigh    = activeType;
@@ -106,17 +108,21 @@ ClickButton::ClickButton(uint8_t buttonPin, boolean activeType, boolean internal
   multiclickTime = 250;           // Time limit for multi clicks
   longClickTime  = 1000;          // time until "long" click register
   inProcess = false;
-  pinMode(_pin, INPUT);
+  if(_pinMode!=cb_pinMode::cb_NO_PIN) pinMode(_pin, _pinMode);
+  
   // Turn on internal pullup resistor if applicable
-  if (_activeHigh == LOW && internalPullup == CLICKBTN_PULLUP) digitalWrite(_pin,HIGH);
+  //if (_activeHigh == LOW && internalPullup == CLICKBTN_PULLUP) digitalWrite(_pin,HIGH);
 }
-
-
 
 void ClickButton::Update()
 {
-  long now = (long)millis();      // get current time
-  _btnState = digitalRead(_pin);  // current appearant button state
+  Update(digitalRead(_pin));  // current appearant button state
+}
+
+void ClickButton::Update(boolean btnState)
+{
+  unsigned long now = millis();      // get current time
+  _btnState = btnState;
 
   // Make the button logic active-high in code
   if (!_activeHigh) _btnState = !_btnState;
