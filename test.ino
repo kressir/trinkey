@@ -25,12 +25,12 @@ int writeStop = -1;
 
 void setup() {
   Serial.begin(9600);
-  btnKey.debounceTime   = 25;   // Debounce timer in ms
-  btnKey.multiclickTime = 300;  // Time limit for multi clicks
-  btnKey.longClickTime  = 700; // time until "held-down clicks" register
-  touchPad.debounceTime   = 50;   // Debounce timer in ms
-  touchPad.multiclickTime = 350;  // Time limit for multi clicks
-  touchPad.longClickTime  = 1000; // time until "held-down clicks" register
+  btnKey.debounceTime   = 25;   
+  btnKey.multiclickTime = 300;  
+  btnKey.longClickTime  = 700; 
+  touchPad.debounceTime   = 50;   
+  touchPad.multiclickTime = 350;  
+  touchPad.longClickTime  = 1000; 
   
   strip.begin();
   strip.setBrightness(neo_brightness);
@@ -94,19 +94,12 @@ void loop() {
   
   touchPad.Update(touch>350?HIGH:LOW);
   if (touchPad.depressed){
-    if (!touching){
-      touching=true;
-      //delay the time to start changing brightness
-      intLastInc = millis()+300;
-    }
-    if(millis()-intLastInc>15){
+    if(millis()-intLastInc>15 && millis()>touchPad.timeDown+500){
       intLastInc = millis();
       neo_brightness = neo_brightness + intDir;
       if (neo_brightness >= 255) intDir = -1;
       if (neo_brightness <= 0) intDir = 1;
     }
-  }else{
-    touching=false;
   }
   if (touchPad.clicks==2){
     if (neo_brightness<125) neo_brightness=255;
