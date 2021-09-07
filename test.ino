@@ -60,6 +60,7 @@ void loop() {
     prnt=false;
   }
   
+  int incomingByte;
   btnKey.Update();
   switch (btnKey.clicks) {
     case 1:
@@ -71,6 +72,9 @@ void loop() {
     case -1:
       Keyboard.println(fd.stuff);
       break;
+    case 3:
+      Keyboard.print(fd.stuff);
+      break;
     case -2:
       Keyboard.press(KEY_LEFT_CTRL);
       delay(100);
@@ -81,6 +85,11 @@ void loop() {
     case -5:
       prog = true;
       writeStop = -1;
+      //purge the buffer initially
+      delay(10);
+      while (Serial.available() > 0) {
+        incomingByte = Serial.read();
+      }
       break;
     default:
       break;
@@ -106,7 +115,6 @@ void loop() {
     else neo_brightness=1;
   }
 
-  int incomingByte;
   if (prog){
     //use echo asd>COM6
     if (Serial.available() > 0) {
