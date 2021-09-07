@@ -4,7 +4,8 @@
 #include "ClickButton.h"
 #include <FlashStorage.h>
 
-ClickButton button1(PIN_SWITCH, HIGH, LOW);
+ClickButton button1(PIN_SWITCH, HIGH, cb_pinMode::cb_INPUT_PULLDOWN);
+ClickButton button2(0, HIGH, cb_pinMode::cb_NO_PIN);
 // Create the neopixel strip with the built in definitions NUM_NEOPIXEL and PIN_NEOPIXEL
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_NEOPIXEL, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 // Create the touch pad
@@ -12,6 +13,7 @@ Adafruit_FreeTouch qt = Adafruit_FreeTouch(PIN_TOUCH, OVERSAMPLE_4, RESISTOR_50K
 int16_t neo_brightness = 20; // initialize with 20 brightness (out of 255)
 int intDir = 1;
 unsigned long intLastInc = 0;
+unsigned long intLastTouch = 0;
 
 typedef struct {
   char stuff[100];
@@ -26,9 +28,10 @@ void setup() {
   button1.debounceTime   = 25;   // Debounce timer in ms
   button1.multiclickTime = 300;  // Time limit for multi clicks
   button1.longClickTime  = 700; // time until "held-down clicks" register
+  button2.debounceTime   = 50;   // Debounce timer in ms
+  button2.multiclickTime = 350;  // Time limit for multi clicks
+  button2.longClickTime  = 1000; // time until "held-down clicks" register
   
-  pinMode(PIN_SWITCH, INPUT_PULLDOWN);
-  //while (!Serial);
   strip.begin();
   strip.setBrightness(neo_brightness);
   strip.show(); // Initialize all pixels to 'off'
@@ -45,6 +48,7 @@ unsigned long lastMouse=0;
 bool prnt = false;
 bool wiggle = false;
 bool prog = false;
+bool touching = false;
 
 void loop() {
   
@@ -87,13 +91,25 @@ void loop() {
   //if (prnt) {
   //  Serial.println(touch);
   //}
-  if (touch>500){
-    if(millis()-intLastInc>20){
+  
+  button2.Update(touch>350?HIGH:LOW);
+  if (button2.depressed){
+    if (!touching){
+      touching=true;
+      intLastInc = millis()+300;
+    }
+    if(millis()-intLastInc>15){
       intLastInc = millis();
       neo_brightness = neo_brightness + intDir;
-      if (neo_brightness == 255) intDir = -1;
-      if (neo_brightness == 0) intDir = 1;
+      if (neo_brightness >= 255) intDir = -1;
+      if (neo_brightness <= 0) intDir = 1;
     }
+  }else{
+    touching=false;
+  }
+  if (button2.clicks==2){
+    if (neo_brightness<125) neo_brightness=255;
+    else neo_brightness=1;
   }
 
   int incomingByte;
