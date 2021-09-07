@@ -73,8 +73,16 @@ void loop() {
 
   // measure the captouches
   uint16_t touch = qt.measure();
-  
+  int incomingByte = 0;
   if (wiggle) {
+
+    //use :echo asd > COM6
+    while (Serial.available() > 0) {
+      incomingByte = Serial.read();
+      wiggle=false;
+    
+    }
+      
     strip.setBrightness(neo_brightness);
     if(millis()-lastMouse > 300000){
       Mouse.move(1, 0, 0);
