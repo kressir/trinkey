@@ -4,8 +4,8 @@
 #include "ClickButton.h"
 #include <FlashStorage.h>
 
-ClickButton button1(PIN_SWITCH, HIGH, cb_pinMode::cb_INPUT_PULLDOWN);
-ClickButton button2(0, HIGH, cb_pinMode::cb_NO_PIN);
+ClickButton btnKey(PIN_SWITCH, HIGH, cb_pinMode::cb_INPUT_PULLDOWN);
+ClickButton touchPad(0, HIGH, cb_pinMode::cb_NO_PIN);
 // Create the neopixel strip with the built in definitions NUM_NEOPIXEL and PIN_NEOPIXEL
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_NEOPIXEL, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 // Create the touch pad
@@ -25,12 +25,12 @@ int writeStop = -1;
 
 void setup() {
   Serial.begin(9600);
-  button1.debounceTime   = 25;   // Debounce timer in ms
-  button1.multiclickTime = 300;  // Time limit for multi clicks
-  button1.longClickTime  = 700; // time until "held-down clicks" register
-  button2.debounceTime   = 50;   // Debounce timer in ms
-  button2.multiclickTime = 350;  // Time limit for multi clicks
-  button2.longClickTime  = 1000; // time until "held-down clicks" register
+  btnKey.debounceTime   = 25;   // Debounce timer in ms
+  btnKey.multiclickTime = 300;  // Time limit for multi clicks
+  btnKey.longClickTime  = 700; // time until "held-down clicks" register
+  touchPad.debounceTime   = 50;   // Debounce timer in ms
+  touchPad.multiclickTime = 350;  // Time limit for multi clicks
+  touchPad.longClickTime  = 1000; // time until "held-down clicks" register
   
   strip.begin();
   strip.setBrightness(neo_brightness);
@@ -60,8 +60,8 @@ void loop() {
     prnt=false;
   }
   
-  button1.Update();
-  switch (button1.clicks) {
+  btnKey.Update();
+  switch (btnKey.clicks) {
     case 1:
       prog = false;
       break;
@@ -92,10 +92,11 @@ void loop() {
   //  Serial.println(touch);
   //}
   
-  button2.Update(touch>350?HIGH:LOW);
-  if (button2.depressed){
+  touchPad.Update(touch>350?HIGH:LOW);
+  if (touchPad.depressed){
     if (!touching){
       touching=true;
+      //delay the time to start changing brightness
       intLastInc = millis()+300;
     }
     if(millis()-intLastInc>15){
@@ -107,7 +108,7 @@ void loop() {
   }else{
     touching=false;
   }
-  if (button2.clicks==2){
+  if (touchPad.clicks==2){
     if (neo_brightness<125) neo_brightness=255;
     else neo_brightness=1;
   }
