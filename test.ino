@@ -43,12 +43,23 @@ void setup() {
   fd = my_flash_store.read();
 }
 
+unsigned long flashTime=0;
 unsigned long lp=0;
 unsigned long lastMouse=0;
 bool prnt = false;
 bool wiggle = false;
 bool prog = false;
 bool touching = false;
+
+/*void flash(){
+  strip.show();
+  strip.setPixelColor(0, strip.Color(255, 255, 255));
+  strip.setBrightness(255);
+  strip.show();
+  strip.show();
+  delay(500);
+  strip.show();
+}*/
 
 void loop() {
   
@@ -71,16 +82,19 @@ void loop() {
       break;
     case -1:
       Keyboard.println(fd.stuff);
+      flashTime = millis()+100;
       break;
     case 3:
       Keyboard.print(fd.stuff);
+      flashTime = millis()+100;
       break;
     case -2:
       Keyboard.press(KEY_LEFT_CTRL);
-      delay(100);
+      delay(10);
       Keyboard.releaseAll();
-      delay(500);
+      delay(300);
       Keyboard.println(fd.stuff);
+      flashTime = millis()+100;
       break;
     case -5:
       prog = true;
@@ -148,9 +162,13 @@ void loop() {
   }
 
   //set the noepixel color
-  if(prog){
+  if(flashTime> millis()){
+    strip.setPixelColor(0, strip.Color(255, 255, 255));    
+    strip.setBrightness(255);
+  }
+  else if(prog){
     strip.setPixelColor(0, strip.Color(255, 0, 0));    
-    strip.setBrightness(neo_brightness);
+    strip.setBrightness(255);
   }else if(wiggle) {
     strip.setPixelColor(0, strip.Color(0, 0, 255));
     strip.setBrightness(neo_brightness);    
