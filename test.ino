@@ -23,6 +23,17 @@ flashData fd;
 
 int writeStop = -1;
 
+unsigned long flashTime=0;
+unsigned long lp=0;
+unsigned long lastMouse=0;
+unsigned long wiggleStart=0;
+bool prnt = false;
+bool wiggle = false;
+bool prog = false;
+bool touching = false;
+int wiggleHours = 0;
+bool booting = true;
+
 void setup() {
   Serial.begin(9600);
   btnKey.debounceTime   = 25;   
@@ -41,25 +52,15 @@ void setup() {
   Keyboard.begin();
   Mouse.begin();
   fd = my_flash_store.read();
+
+  delay(500);
+  if(digitalRead(PIN_SWITCH)!=HIGH){
+    fd.stuff[0] = 0;
+    my_flash_store.write(fd);
+  }
+  flashTime=millis()+1000;
 }
 
-unsigned long flashTime=0;
-unsigned long lp=0;
-unsigned long lastMouse=0;
-bool prnt = false;
-bool wiggle = false;
-bool prog = false;
-bool touching = false;
-
-/*void flash(){
-  strip.show();
-  strip.setPixelColor(0, strip.Color(255, 255, 255));
-  strip.setBrightness(255);
-  strip.show();
-  strip.show();
-  delay(500);
-  strip.show();
-}*/
 
 void loop() {
   
@@ -72,49 +73,53 @@ void loop() {
   }
   
   int incomingByte;
-  btnKey.Update();
-  switch (btnKey.clicks) {
-    case 1:
-      prog = false;
-      break;
-    case 2:
-      wiggle = !wiggle;
-      break;
-    case -1:
-      Keyboard.println(fd.stuff);
-      flashTime = millis()+100;
-      break;
-    case 3:
-      Keyboard.print(fd.stuff);
-      flashTime = millis()+100;
-      break;
-    case -2:
-      Keyboard.press(KEY_LEFT_CTRL);
-      delay(10);
-      Keyboard.releaseAll();
-      delay(300);
-      Keyboard.println(fd.stuff);
-      flashTime = millis()+100;
-      break;
-    case -5:
-      prog = true;
-      writeStop = -1;
-      //purge the buffer initially
-      delay(10);
-      while (Serial.available() > 0) {
-        incomingByte = Serial.read();
-      }
-      break;
-    default:
-      break;
+  if(booting && digitalRead(PIN_SWITCH)==HIGH){
+    flashTime=millis()+100;
+  }else{
+    booting = false;
+  }
+  
+  if(millis()>3000){
+    btnKey.Update();
+    switch (btnKey.clicks) {
+      case 1:
+        prog = false;
+        break;
+      case -1:
+        Keyboard.println(fd.stuff);
+        flashTime = millis()+100;
+        break;
+      case -2:
+        Keyboard.press(KEY_LEFT_CTRL);
+        delay(10);
+        Keyboard.releaseAll();
+        delay(300);
+        Keyboard.println(fd.stuff);
+        flashTime = millis()+100;
+        break;
+      case -5:
+        prog = true;
+        writeStop = -1;
+        //purge the buffer initially
+        delay(10);
+        while (Serial.available() > 0) {
+          incomingByte = Serial.read();
+        }
+        break;
+      default:
+        if(btnKey.clicks>1){
+          wiggle = !wiggle;
+          if (wiggle){
+            wiggleStart = millis();
+            wiggleHours = btnKey.clicks;
+          }
+        }
+        break;
+    }
   }
 
   // measure the captouches
   uint16_t touch = qt.measure();
-  //if (prnt) {
-  //  Serial.println(touch);
-  //}
-  
   touchPad.Update(touch>350?HIGH:LOW);
   if (touchPad.depressed){
     if(millis()-intLastInc>15 && millis()>touchPad.timeDown+500){
@@ -153,6 +158,11 @@ void loop() {
   }
   
   if (wiggle) {
+    if(millis() > wiggleStart+(1000*60*60*wiggleHours)){
+      //only leave it on for x hours
+      wiggle=false;
+      flashTime = millis()+1000;
+    }
     if(millis()-lastMouse > 300000){
       Mouse.move(1, 0, 0);
       delay(10);
@@ -162,15 +172,18 @@ void loop() {
   }
 
   //set the noepixel color
+  
   if(flashTime> millis()){
     strip.setPixelColor(0, strip.Color(255, 255, 255));    
     strip.setBrightness(255);
-  }
-  else if(prog){
+  }else if(prog){
     strip.setPixelColor(0, strip.Color(255, 0, 0));    
     strip.setBrightness(255);
   }else if(wiggle) {
     strip.setPixelColor(0, strip.Color(0, 0, 255));
+    strip.setBrightness(neo_brightness);    
+  }else if(fd.stuff[0] == 0){
+    strip.setPixelColor(0, strip.Color(0, 255, 0));  
     strip.setBrightness(neo_brightness);    
   }else{
     strip.setBrightness(0);    
