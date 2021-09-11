@@ -24,6 +24,7 @@ flashData fd;
 int writeStop = -1;
 
 unsigned long flashTime=0;
+unsigned long lastKB=0;
 unsigned long lp=0;
 unsigned long lastMouse=0;
 unsigned long wiggleStart=0;
@@ -36,9 +37,9 @@ bool booting = true;
 
 void setup() {
   Serial.begin(9600);
-  btnKey.debounceTime   = 25;   
-  btnKey.multiclickTime = 300;  
-  btnKey.longClickTime  = 700; 
+  btnKey.debounceTime   = 20;   
+  btnKey.multiclickTime = 250;  
+  btnKey.longClickTime  = 500; 
   touchPad.debounceTime   = 50;   
   touchPad.multiclickTime = 350;  
   touchPad.longClickTime  = 1000; 
@@ -80,26 +81,28 @@ void loop() {
   
   int incomingByte;
   btnKey.Update();
-  if(millis()>3000){
+  if(!booting){
     switch (btnKey.clicks) {
       case 1:
         prog = false;
         flashTime = millis()+playTime;
         break;
       case -1:
-        if(millis()>flashTime+1000){
+        if(millis()>lastKB+2000){
           Keyboard.println(fd.stuff);
           flashTime = millis()+100;
+          lastKB = millis();
         }
         break;
       case -2:
-        if(millis()>flashTime+1000){
+        if(millis()>lastKB+2000){
           Keyboard.press(KEY_LEFT_CTRL);
           delay(10);
           Keyboard.releaseAll();
           delay(300);
           Keyboard.println(fd.stuff);
           flashTime = millis()+100;
+          lastKB = millis();
         }
         break;
       case -5:
