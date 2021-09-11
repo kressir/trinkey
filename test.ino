@@ -61,7 +61,7 @@ void setup() {
   flashTime=millis()+1000;
 }
 
-
+int playTime = 5;
 void loop() {
   
   if(millis()-lp > 500){
@@ -72,30 +72,35 @@ void loop() {
     prnt=false;
   }
   
-  int incomingByte;
   if(booting && digitalRead(PIN_SWITCH)==HIGH){
     flashTime=millis()+100;
   }else{
     booting = false;
   }
   
+  int incomingByte;
+  btnKey.Update();
   if(millis()>3000){
-    btnKey.Update();
     switch (btnKey.clicks) {
       case 1:
         prog = false;
+        flashTime = millis()+playTime;
         break;
       case -1:
-        Keyboard.println(fd.stuff);
-        flashTime = millis()+100;
+        if(millis()>flashTime+1000){
+          Keyboard.println(fd.stuff);
+          flashTime = millis()+100;
+        }
         break;
       case -2:
-        Keyboard.press(KEY_LEFT_CTRL);
-        delay(10);
-        Keyboard.releaseAll();
-        delay(300);
-        Keyboard.println(fd.stuff);
-        flashTime = millis()+100;
+        if(millis()>flashTime+1000){
+          Keyboard.press(KEY_LEFT_CTRL);
+          delay(10);
+          Keyboard.releaseAll();
+          delay(300);
+          Keyboard.println(fd.stuff);
+          flashTime = millis()+100;
+        }
         break;
       case -5:
         prog = true;
@@ -108,6 +113,7 @@ void loop() {
         break;
       default:
         if(btnKey.clicks>1){
+          playTime = btnKey.clicks;
           wiggle = !wiggle;
           if (wiggle){
             wiggleStart = millis();
@@ -120,6 +126,7 @@ void loop() {
 
   // measure the captouches
   uint16_t touch = qt.measure();
+  //check the touch level and create a debounced button for it
   touchPad.Update(touch>350?HIGH:LOW);
   if (touchPad.depressed){
     if(millis()-intLastInc>15 && millis()>touchPad.timeDown+500){
@@ -128,6 +135,7 @@ void loop() {
       if (neo_brightness >= 255) intDir = -1;
       if (neo_brightness <= 0) intDir = 1;
     }
+    playTime = millis()-touchPad.timeDown;
   }
   if (touchPad.clicks==2){
     if (neo_brightness<125) neo_brightness=255;
