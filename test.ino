@@ -3,7 +3,23 @@
 #include "HID-Project.h"  // https://github.com/NicoHood/HID
 #include "ClickButton.h"
 #include <FlashStorage.h>
-
+/*
+ * 
+ * 1 click flashes led for number of ms based on the last of these events:
+ *   - last number of double-clicks
+ *   - how long touchpad was pressed
+ * double-click toggles wiggle (slight mouse movement every 5 minutes)
+ * wiggle stays on for a number of hours based on the count of clicks
+ * double-click keeps it on for 2 hours, triple for 3 hours, 49-click for 49 hours, etc.
+ * long single click types store1 and <enter>
+ * long double-click types a ctrl key, pauses, then types store1 and <enter> - good for waking and unlocking
+ * long 3-click types store2 and <enter>
+ * long 4-click sets store2
+ * long 5-click sets store1
+ * long 11-click prints help
+ * must wait 2 seconds between uses
+ * 
+ */
 ClickButton btnKey(PIN_SWITCH, HIGH, cb_pinMode::cb_INPUT_PULLDOWN);
 ClickButton touchPad(0, HIGH, cb_pinMode::cb_NO_PIN);
 // Create the neopixel strip with the built in definitions NUM_NEOPIXEL and PIN_NEOPIXEL
@@ -134,6 +150,35 @@ void loop() {
         delay(10);
         while (Serial.available() > 0) {
           incomingByte = Serial.read();
+        }
+        break;
+      case -11:
+        if(millis()>lastKB+2000){
+          Keyboard.println("The Rick clicker neo key");
+          Keyboard.println("  1 click flashes led for number of ms based on the last of these events:");
+          Keyboard.println("    - last number of double-clicks");
+          Keyboard.println("    - how long touchpad was pressed");
+          Keyboard.println("  double-click toggles wiggle (slight mouse movement every 5 minutes)");
+          Keyboard.println("  wiggle stays on for a number of hours based on the count of clicks");
+          Keyboard.println("  led will glow blue when wiggle is on");
+          Keyboard.println("  brightness can be changed by holding the touch pad - double clicking the touch pad will toggle full dim/full bright");
+          Keyboard.println("  double-click keeps it on for 2 hours, triple for 3 hours, 49-click for 49 hours, etc.");
+          Keyboard.println("  long single click types store1 and <enter>");
+          Keyboard.println("  long double-click types a ctrl key, pauses, then types store1 and <enter> - good for waking and unlocking");
+          Keyboard.println("  long 3-click types store2 and <enter>");
+          Keyboard.println("  long 4-click sets store2");
+          Keyboard.println("  long 5-click sets store1");
+          Keyboard.println("  to send text to a store, you must know the com port for the neo key...");
+          Keyboard.println("    in a cmd prompt, type the following:");
+          Keyboard.println("    echo this is the text to store!>com5");
+          Keyboard.println("  the neo key will light up a different color when in store mode and the light will change when store is successful");
+          Keyboard.println("  if the neo key is removed and re-inserted or pc is shut down or hibernated, storage will be deleted ");
+          Keyboard.println("    unless holding in the key while plugging in and holding for 2 seconds");
+          Keyboard.println("  a green constant light is an indication of a blank store");
+          Keyboard.println("  long 11-click prints help");
+          Keyboard.println("  must wait 2 seconds between uses");
+          flashTime = millis()+100;
+          lastKB = millis();
         }
         break;
       default:
