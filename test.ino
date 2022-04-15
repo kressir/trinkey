@@ -184,7 +184,7 @@ void loop() {
             prog = false;
           }else{
             fd2.stuff[writeStop] = 0;
-            my_flash_store2.write(fd);
+            my_flash_store2.write(fd2);
             prog2 = false;
           }
           writeStop = -1;
