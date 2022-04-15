@@ -19,7 +19,9 @@ typedef struct {
   char stuff[100];
 } flashData;
 FlashStorage(my_flash_store, flashData);
+FlashStorage(my_flash_store2, flashData);
 flashData fd;
+flashData fd2;
 
 int writeStop = -1;
 
@@ -31,6 +33,7 @@ unsigned long wiggleStart=0;
 bool prnt = false;
 bool wiggle = false;
 bool prog = false;
+bool prog2 = false;
 bool touching = false;
 int wiggleHours = 0;
 bool booting = true;
@@ -53,11 +56,14 @@ void setup() {
   Keyboard.begin();
   Mouse.begin();
   fd = my_flash_store.read();
+  fd2 = my_flash_store2.read();
 
   delay(500);
   if(digitalRead(PIN_SWITCH)!=HIGH){
     fd.stuff[0] = 0;
     my_flash_store.write(fd);
+    fd2.stuff[0] = 0;
+    my_flash_store2.write(fd2);
   }
   flashTime=millis()+1000;
 }
@@ -105,6 +111,22 @@ void loop() {
           lastKB = millis();
         }
         break;
+      case -3:
+        if(millis()>lastKB+2000){
+          Keyboard.println(fd2.stuff);
+          flashTime = millis()+100;
+          lastKB = millis();
+        }
+        break;
+      case -4:
+        prog2 = true;
+        writeStop = -1;
+        //purge the buffer initially
+        delay(10);
+        while (Serial.available() > 0) {
+          incomingByte = Serial.read();
+        }
+        break;
       case -5:
         prog = true;
         writeStop = -1;
@@ -145,7 +167,7 @@ void loop() {
     else neo_brightness=1;
   }
 
-  if (prog){
+  if (prog || prog2){
     //use echo asd>COM6
     if (Serial.available() > 0) {
       while (Serial.available() > 0) {
@@ -156,13 +178,23 @@ void loop() {
           while (Serial.available() > 0) {
             incomingByte = Serial.read();
           }
-          fd.stuff[writeStop] = 0;
-          my_flash_store.write(fd);
-          prog = false;
+          if(prog){
+            fd.stuff[writeStop] = 0;
+            my_flash_store.write(fd);
+            prog = false;
+          }else{
+            fd2.stuff[writeStop] = 0;
+            my_flash_store2.write(fd);
+            prog2 = false;
+          }
           writeStop = -1;
         }else{
           writeStop++;
-          fd.stuff[writeStop] = incomingByte;
+          if(prog){
+            fd.stuff[writeStop] = incomingByte;
+          }else{
+            fd2.stuff[writeStop] = incomingByte;
+          }
         } 
       }
     }
@@ -189,6 +221,9 @@ void loop() {
     strip.setBrightness(255);
   }else if(prog){
     strip.setPixelColor(0, strip.Color(255, 0, 0));    
+    strip.setBrightness(255);
+  }else if(prog2){
+    strip.setPixelColor(0, strip.Color(255, 255, 0));    
     strip.setBrightness(255);
   }else if(wiggle) {
     strip.setPixelColor(0, strip.Color(0, 0, 255));
