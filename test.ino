@@ -53,6 +53,7 @@ bool prog2 = false;
 bool touching = false;
 int wiggleHours = 0;
 bool booting = true;
+bool disabled = false;
 
 void setup() {
   Serial.begin(9600);
@@ -74,12 +75,13 @@ void setup() {
   fd = my_flash_store.read();
   fd2 = my_flash_store2.read();
 
-  delay(500);
+  delay(2000);
   if(digitalRead(PIN_SWITCH)!=HIGH){
-    fd.stuff[0] = 0;
-    my_flash_store.write(fd);
-    fd2.stuff[0] = 0;
-    my_flash_store2.write(fd2);
+    //fd.stuff[0] = 0;
+    //my_flash_store.write(fd);
+    //fd2.stuff[0] = 0;
+    //my_flash_store2.write(fd2);
+    disabled = true;    
   }
   flashTime=millis()+1000;
 }
@@ -101,6 +103,24 @@ void loop() {
     booting = false;
   }
   
+  // measure the captouches
+  uint16_t touch = qt.measure();
+  //check the touch level and create a debounced button for it
+  touchPad.Update(touch>350?HIGH:LOW);
+  if (touchPad.depressed){
+    if(millis()-intLastInc>15 && millis()>touchPad.timeDown+500){
+      intLastInc = millis();
+      neo_brightness = neo_brightness + intDir;
+      if (neo_brightness >= 255) intDir = -1;
+      if (neo_brightness <= 0) intDir = 1;
+    }
+    playTime = millis()-touchPad.timeDown;
+  }
+  if (touchPad.clicks==2){
+    if (neo_brightness<125) neo_brightness=255;
+    else neo_brightness=1;
+  }
+
   int incomingByte;
   btnKey.Update();
   if(!booting){
@@ -110,28 +130,41 @@ void loop() {
         flashTime = millis()+playTime;
         break;
       case -1:
-        if(millis()>lastKB+2000){
-          Keyboard.println(fd.stuff);
-          flashTime = millis()+100;
-          lastKB = millis();
+        if(millis()>lastKB+2000 && !disabled && touchPad.depressed){
+          //hold here until touch pad no longer depressed - then see if button still down
+          while(qt.measure()>200){delay(10);}
+          if(digitalRead(PIN_SWITCH)==HIGH){
+            Keyboard.println(fd.stuff);
+            flashTime = millis()+100;
+            lastKB = millis();
+          }
         }
         break;
       case -2:
-        if(millis()>lastKB+2000){
-          Keyboard.press(KEY_LEFT_CTRL);
-          delay(10);
-          Keyboard.releaseAll();
-          delay(300);
-          Keyboard.println(fd.stuff);
-          flashTime = millis()+100;
-          lastKB = millis();
+        if(millis()>lastKB+2000 && !disabled && touchPad.depressed){
+          
+          //hold here until touch pad no longer depressed - then see if button still down
+          while(qt.measure()>200){delay(10);}
+          if(digitalRead(PIN_SWITCH)==HIGH){
+            Keyboard.press(KEY_LEFT_CTRL);
+            delay(10);
+            Keyboard.releaseAll();
+            delay(300);
+            Keyboard.println(fd.stuff);
+            flashTime = millis()+100;
+            lastKB = millis();
+          }
         }
         break;
       case -3:
-        if(millis()>lastKB+2000){
-          Keyboard.println(fd2.stuff);
-          flashTime = millis()+100;
-          lastKB = millis();
+        if(millis()>lastKB+2000 && !disabled && touchPad.depressed){
+          //hold here until touch pad no longer depressed - then see if button still down
+          while(qt.measure()>200){delay(10);}
+          if(digitalRead(PIN_SWITCH)==HIGH){
+            Keyboard.println(fd2.stuff);
+            flashTime = millis()+100;
+            lastKB = millis();
+          }
         }
         break;
       case -4:
@@ -194,23 +227,6 @@ void loop() {
     }
   }
 
-  // measure the captouches
-  uint16_t touch = qt.measure();
-  //check the touch level and create a debounced button for it
-  touchPad.Update(touch>350?HIGH:LOW);
-  if (touchPad.depressed){
-    if(millis()-intLastInc>15 && millis()>touchPad.timeDown+500){
-      intLastInc = millis();
-      neo_brightness = neo_brightness + intDir;
-      if (neo_brightness >= 255) intDir = -1;
-      if (neo_brightness <= 0) intDir = 1;
-    }
-    playTime = millis()-touchPad.timeDown;
-  }
-  if (touchPad.clicks==2){
-    if (neo_brightness<125) neo_brightness=255;
-    else neo_brightness=1;
-  }
 
   if (prog || prog2){
     //use echo asd>COM6
@@ -273,7 +289,7 @@ void loop() {
   }else if(wiggle) {
     strip.setPixelColor(0, strip.Color(0, 0, 255));
     strip.setBrightness(neo_brightness);    
-  }else if(fd.stuff[0] == 0){
+  }else if(fd.stuff[0] == 0 || disabled){
     strip.setPixelColor(0, strip.Color(0, 255, 0));  
     strip.setBrightness(neo_brightness);    
   }else{
