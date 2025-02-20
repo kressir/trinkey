@@ -133,7 +133,7 @@ void loop() {
         flashTime = millis()+playTime;
         break;
       case -1:
-        if(millis()>lastKB+2000 && !disabled && touchPad.depressed){
+        if(millis()>lastKB+1000 && !disabled && touchPad.depressed){
           //hold here until touch pad no longer depressed - then see if button still down
           while(qt.measure()>200){delay(10);}
           if(digitalRead(PIN_SWITCH)==HIGH){
@@ -141,7 +141,7 @@ void loop() {
             //Keyboard.println(fd.stuff);
             for(byte i = 0; i < strlen(fd.stuff); i++){
               Keyboard.print(fd.stuff[i]);
-              delay(25);
+              delay(12);  //10 seems too fast
             } 
             Keyboard.println();
             Keyboard.releaseAll();
@@ -166,7 +166,8 @@ void loop() {
             flashTime = millis()+100;
             lastKB = millis();
           }
-        }else{
+        }else if(millis()>lastKB+2000 && !disabled ){
+          //Windows Key  and L - Lock
           Keyboard.press(KEY_LEFT_GUI);
           Keyboard.press('l');
           Keyboard.releaseAll();
@@ -201,7 +202,7 @@ void loop() {
           incomingByte = Serial.read();
         }
         break;
-      case -11:
+      /*case -11:
         if(millis()>lastKB+2000){
           Keyboard.println("The Rick clicker neo key");
           Keyboard.println("  1 click flashes led for number of ms based on the last of these events:");
@@ -229,7 +230,7 @@ void loop() {
           flashTime = millis()+100;
           lastKB = millis();
         }
-        break;
+        break;*/
       default:
         if(btnKey.clicks>1){
           playTime = btnKey.clicks;
