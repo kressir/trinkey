@@ -1,8 +1,9 @@
 #include <Adafruit_NeoPixel.h>
 #include "Adafruit_FreeTouch.h"
-#include "HID-Project.h"  // https://github.com/NicoHood/HID
 #include "ClickButton.h"
 #include <FlashStorage.h>
+#include <Keyboard.h>
+#include <Mouse.h>
 /*
  * 
  * 1 click flashes led for number of ms based on the last of these events:
@@ -70,6 +71,7 @@ void setup() {
 
   if (! qt.begin())
     Serial.println("Failed to begin qt");
+  
   Keyboard.begin();
   Mouse.begin();
   fd = my_flash_store.read();
@@ -107,6 +109,7 @@ void loop() {
   uint16_t touch = qt.measure();
   //check the touch level and create a debounced button for it
   touchPad.Update(touch>350?HIGH:LOW);
+  //Serial.println(touch);
   if (touchPad.depressed){
     if(millis()-intLastInc>15 && millis()>touchPad.timeDown+500){
       intLastInc = millis();
@@ -134,11 +137,20 @@ void loop() {
           //hold here until touch pad no longer depressed - then see if button still down
           while(qt.measure()>200){delay(10);}
           if(digitalRead(PIN_SWITCH)==HIGH){
-            Keyboard.println(fd.stuff);
+
+            //Keyboard.println(fd.stuff);
+            for(byte i = 0; i < strlen(fd.stuff); i++){
+              Keyboard.print(fd.stuff[i]);
+              delay(25);
+            } 
+            Keyboard.println();
+            Keyboard.releaseAll();
+
             flashTime = millis()+100;
             lastKB = millis();
           }
         }
+        
         break;
       case -2:
         if(millis()>lastKB+2000 && !disabled && touchPad.depressed){
@@ -154,6 +166,10 @@ void loop() {
             flashTime = millis()+100;
             lastKB = millis();
           }
+        }else{
+          Keyboard.press(KEY_LEFT_GUI);
+          Keyboard.press('l');
+          Keyboard.releaseAll();
         }
         break;
       case -3:
