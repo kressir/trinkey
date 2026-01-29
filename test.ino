@@ -296,7 +296,7 @@ void loop() {
   
   if(flashTime> millis()){
     strip.setPixelColor(0, strip.Color(255, 255, 255));    
-    strip.setBrightness(255);
+    strip.setBrightness(neo_brightness);
   }else if(prog){
     strip.setPixelColor(0, strip.Color(255, 0, 0));    
     strip.setBrightness(255);
